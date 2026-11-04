@@ -1,0 +1,41 @@
+name: Make reel
+
+on:
+  workflow_dispatch:
+    inputs:
+      letter:
+        description: "Shape to draw (e.g. S or SW)"
+        default: "S"
+      handle:
+        description: "Bottom-left label"
+        default: "@sanglianwork · 2026"
+      site:
+        description: "Top-left label"
+        default: "sanglianwork.de"
+      seconds:
+        description: "Length in seconds"
+        default: "20"
+  push:
+    paths: ["make_reel.py", "code_shown.py"]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy pillow scipy imageio-ffmpeg
+      - name: Put fonts in place
+        run: mkdir -p fonts && mv -f *.ttf fonts/ 2>/dev/null || true
+      - run: python make_reel.py
+        env:
+          REEL_LETTER: ${{ inputs.letter }}
+          REEL_HANDLE: ${{ inputs.handle }}
+          REEL_SITE: ${{ inputs.site }}
+          REEL_SECONDS: ${{ inputs.seconds }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sanglianwork-reel
+          path: sanglianwork_reel.mp4
